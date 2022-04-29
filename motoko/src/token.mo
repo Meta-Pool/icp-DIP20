@@ -256,6 +256,16 @@ shared(msg) actor class Token(
         return #Ok(txcounter - 1);
     };
 
+    public shared(msg) func mintAll(mints: [(Principal, Nat)]): async TxReceipt {
+        if(msg.caller != owner_) {
+            return #Err(#Unauthorized);
+        };
+        for ((to, value) in mints.vals()) {
+            ignore await mint(to, value);
+        };
+        return #Ok(mints.size());
+    };
+
     public shared(msg) func burn(amount: Nat): async TxReceipt {
         let from_balance = _balanceOf(msg.caller);
         if(from_balance < amount) {
