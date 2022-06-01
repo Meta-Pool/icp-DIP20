@@ -266,23 +266,30 @@ shared(msg) actor class Token(
         return #Ok(mints.size());
     };
 
-    public shared(msg) func burn(amount: Nat): async TxReceipt {
-        let from_balance = _balanceOf(msg.caller);
+    public shared(msg) func burnFor(user: Principal, amount: Nat): async TxReceipt {
+        if(msg.caller != owner_ and msg.caller != user) {
+            return #Err(#Unauthorized);
+        };
+        let from_balance = _balanceOf(user);
         if(from_balance < amount) {
             return #Err(#InsufficientBalance);
         };
         totalSupply_ -= amount;
-        balances.put(msg.caller, from_balance - amount);
+        balances.put(user, from_balance - amount);
         ignore addRecord(
-            msg.caller, "burn",
+            user, "burn",
             [
-                ("from", #Principal(msg.caller)),
+                ("from", #Principal(user)),
                 ("value", #U64(u64(amount))),
                 ("fee", #U64(u64(0)))
             ]
         );
         txcounter += 1;
         return #Ok(txcounter - 1);
+    };
+
+    public shared(msg) func burn(amount: Nat): async TxReceipt {
+        await burnFor(msg.caller, amount)
     };
 
     public query func logo() : async Text {
