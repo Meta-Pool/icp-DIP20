@@ -289,7 +289,22 @@ shared(msg) actor class Token(
     };
 
     public shared(msg) func burn(amount: Nat): async TxReceipt {
-        await burnFor(msg.caller, amount)
+        let from_balance = _balanceOf(msg.caller);
+        if(from_balance < amount) {
+            return #Err(#InsufficientBalance);
+        };
+        totalSupply_ -= amount;
+        balances.put(msg.caller, from_balance - amount);
+        ignore addRecord(
+            msg.caller, "burn",
+            [
+                ("from", #Principal(msg.caller)),
+                ("value", #U64(u64(amount))),
+                ("fee", #U64(u64(0)))
+            ]
+        );
+        txcounter += 1;
+        return #Ok(txcounter - 1);
     };
 
     public query func logo() : async Text {
