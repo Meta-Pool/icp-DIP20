@@ -261,7 +261,18 @@ shared(msg) actor class Token(
             return #Err(#Unauthorized);
         };
         for ((to, value) in mints.vals()) {
-            ignore await mint(to, value);
+            let to_balance = _balanceOf(to);
+            totalSupply_ += value;
+            balances.put(to, to_balance + value);
+            ignore addRecord(
+                msg.caller, "mint",
+                [
+                    ("to", #Principal(to)),
+                    ("value", #U64(u64(value))),
+                    ("fee", #U64(u64(0)))
+                ]
+            );
+            txcounter += 1;
         };
         return #Ok(mints.size());
     };
