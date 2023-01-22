@@ -1004,12 +1004,11 @@ shared(msg) actor class Token(
     };
 
     func findTransaction(args: Types.Transaction, log: TxLog): ?Types.TxIndex {
-        let created_at_time = switch {
-            case (null) { return null };
-            case (?t) { t };
+        if (args.created_at_time == null) {
+            return null;
         };
 
-        // TODO: Use binary search here
+        // TODO: Sort this array and use binary search here
         for (tx in log.vals()) {
             if (args == tx.args) {
                 return ?tx.index;
@@ -1032,13 +1031,6 @@ shared(msg) actor class Token(
         newLog
     };
 
-    func txLogOrder(x: TxLogEntry, y: TxLogEntry}): Order.Order {
-        Nat64.compare(
-            Option.get(x.created_at_time, 0: Nat64),
-            Option.get(y.created_at_time, 0: Nat64)
-        )
-    };
-
     func logTransaction(index: Types.TxIndex, args: Types.Transaction, log: TxLog): TxLog {
         if (args.created_at_time == null) {
             // Can't dedupe txns with no explicit created_at_time, so no point
@@ -1048,7 +1040,6 @@ shared(msg) actor class Token(
         // Only prune the transaction log when logging a successful transaction, because at this point the user has paid the fee.
         let newLog = pruneTransactionLog(log);
         newLog.add({index; args});
-        newLog.sort(txLogOrder);
         newLog
     };
 
