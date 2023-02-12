@@ -872,12 +872,15 @@ shared(msg) actor class Token(
     };
 
     public query func icrc1_metadata() : async [(Text, ICRC1MetadataValue)] {
-        [
-            ("icrc1:symbol", #Text(symbol_)),
-            ("icrc1:name", #Text(name_)),
-            ("icrc1:decimals", #Nat(Nat8.toNat(decimals_))),
-            ("icrc1:fee", #Nat(fee)),
-        ]
+        let b = Buffer.Buffer<(Text, ICRC1MetadataValue)>(5);
+        b.add(("icrc1:symbol", #Text(symbol_)));
+        b.add(("icrc1:name", #Text(name_)));
+        b.add(("icrc1:decimals", #Nat(Nat8.toNat(decimals_))));
+        b.add(("icrc1:fee", #Nat(fee)));
+        if (logo_.size() > 0) {
+            b.add(("icrc1:logo", #Text(logo_)));
+        };
+        b.toArray()
     };
 
     public query func icrc1_total_supply() : async Nat {
