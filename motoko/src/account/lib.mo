@@ -34,14 +34,14 @@ module {
         Blob.fromArrayMut(Array.init(32, 0 : Nat8))
     };
 
-    public func toBlob(a: Account) : Blob {
+    public func toText(a: Account) : Text {
         switch (a.subaccount) {
-            case (null) { Principal.toBlob(a.owner) };
+            case (null) { Principal.toText(a.owner) };
             case (?blob) {
                 assert(blob.size() == 32);
                 let shrunk = shrink(blob);
                 if (shrunk.size() == 0) {
-                    Principal.toBlob(a.owner)
+                    Principal.toText(a.owner)
                 } else {
                     let principalBytes = Principal.toBlob(a.owner);
                     let b = Buffer.Buffer<Nat8>(principalBytes.size() + shrunk.size() + 2);
@@ -49,14 +49,16 @@ module {
                     for (x in shrunk.vals()) { b.add(x) };
                     b.add(Nat8.fromNat(shrunk.size()));
                     b.add(0x7F);
-                    Blob.fromArray(b.toArray())
+                    Principal.toText(
+                        Principal.fromBlob(
+                            Blob.fromArray(
+                                b.toArray()
+                            )
+                        )
+                    )
                 }
             };
         }
-    };
-
-    public func toText(a: Account) : Text {
-        Principal.toText(Principal.fromBlob(toBlob(a)))
     };
 
     // Remove all leading 0-bytes
